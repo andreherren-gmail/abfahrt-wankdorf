@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abfahrten – Löchligut (Bern) – RBS Style</title>
+  <style>
+    :root{
+      --bg:#cc5700;
+      --bg2:#a94700;
+      --fg:#ffffff;
+      --muted:#ffe6cc;
+      --accent:#ffd800;
+      --delay:#ff4d4d;
+      --on-time:#e6ffee;
+      --row:#d8610a;
+      --row-alt:#c45708;
+      --divider:#b34c06;
+    }
+    *{ box-sizing: border-box; }
+    html,body{
+      height:100%;
+      margin:0;
+      background: linear-gradient(180deg,var(--bg),var(--bg2));
+      color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .wrap{
+      max-width: 1920px;
+      margin: 0 auto;
+      padding: 1.2rem 1.4rem 2rem;
+      display:flex;
+      flex-direction:column;
+      gap: 1rem;
+      height:100%;
+    }
+    header{
+      display:flex;
+      align-items: center;
+      justify-content: space-between;
+      gap:1rem;
+      padding:.6rem 1rem;
+      background: rgba(255,255,255,.10);
+      border-radius: 14px;
+    }
+    .title{
+      display:flex;
+      align-items:center;
+      gap:.9rem;
+      font-weight:800;
+      font-size: clamp(20px, 3vw, 36px);
+      letter-spacing:.3px;
+    }
+    .station{ font-weight:900; text-transform:uppercase; }
+    .badge{ padding:.2rem .5rem; font-size:.9rem; border:1px solid rgba(255,255,255,.28); border-radius: 8px; color: var(--muted); }
+    .clock{ display:flex; gap:.65rem; font-size: clamp(18px,2.3vw,28px); color: var(--accent); font-weight:800; }
+    .clock small{ color: var(--muted); font-weight:600; }
+    .statusbar{ display:flex; gap:1rem; font-size:.95rem; color:var(--muted); flex-wrap:wrap; }
+    .dot{ width:.55rem;height:.55rem;border-radius:50%;background:var(--accent);display:inline-block;margin-right:.45rem; }
+    table{ width:100%; border-collapse:collapse; border-radius:14px; overflow:hidden; background:rgba(255,255,255,.06); }
+    thead th{ text-align:left; font-size:clamp(14px,1.6vw,18px); font-weight:800; padding:.9rem; border-bottom:2px solid var(--divider); color:#fff8f0; background:rgba(0,0,0,.05); }
+    tbody tr{ border-bottom:1px solid var(--divider); background:var(--row); }
+    tbody tr:nth-child(even){ background:var(--row-alt); }
+    td{ padding:.7rem .9rem; font-size:clamp(16px,2.1vw,24px); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .col-time{ width:10ch; font-variant-numeric: tabular-nums; }
+    .col-in{ width:10ch; text-align:right; font-variant-numeric: tabular-nums; color: var(--muted); }
+    .col-line{ width:9ch; font-weight:900; }
+    .col-track{ width:6ch; text-align:center; }
+    .pill{ display:inline-flex; min-width:2.9ch; padding:.1rem .45rem; border-radius:10px; background:rgba(0,0,0,.15); font-weight:900; border:1px solid rgba(255,255,255,.2); }
+    .delay{ color:#ffebee; background: rgba(0,0,0,.0); font-weight:900; }
+    .ontime{ color:#eafff0; font-weight:800; }
+    tfoot td{ padding:.7rem .9rem; font-size:.95rem; color:var(--muted); background:rgba(0,0,0,.06); }
+    .warn{ display:none; padding:.6rem .8rem; border:1px solid rgba(255,255,255,.25); border-radius:10px; color:#ffe6e6; background:rgba(0,0,0,.2); font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="1.5" y="5" width="21" height="14" rx="3" ry="3" stroke="white" opacity=".95"></rect>
+          <path d="M3.5 12h17" stroke="white" stroke-width="2" opacity=".95"></path>
+        </svg>
+        <span>Abfahrten</span>
+        <span class="station">Loechligut, Bern</span>
+        <span class="badge">Nur Bus</span>
+      </div>
+      <div class="clock"><span id="time">--:--</span><small id="date">--</small></div>
+    </header>
+    <div class="statusbar">
+      <span><span class="dot"></span><strong>Live</strong> – automatische Aktualisierung (alle <span id="refreshEvery">60</span>s)</span>
+      <span id="lastUpdate">Zuletzt aktualisiert: -</span>
+      <span id="netWarn" class="warn">Keine Internetverbindung - Offline-Anzeige</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th class="col-time">Zeit</th>
+        <th>Nach</th>
+        <th class="col-line">Linie</th>
+        <th class="col-track">Steig</th>
+        <th class="col-in">in</th>
+        <th>Status</th>
+      </tr></thead>
+      <tbody id="rows"><tr><td colspan="6" style="text-align:center;padding:1.4rem">Lade Daten...</td></tr></tbody>
+      <tfoot><tr><td colspan="6">Datenquelle: transport.opendata.ch – nur zu Demo-Zwecken</td></tr></tfoot>
+    </table>
+  </div>
+
+  <script>
+  (function(){
+    const API_URL = "https://transport.opendata.ch/v1/stationboard?station=L%C3%B6chligut&limit=16&transportations[]=bus";
+    const REFRESH_SECS = 60;
+    const rowsEl = document.getElementById('rows');
+    const lastUpdateEl = document.getElementById('lastUpdate');
+    const netWarnEl = document.getElementById('netWarn');
+    const timeEl = document.getElementById('time');
+    const dateEl = document.getElementById('date');
+    const refreshEveryEl = document.getElementById('refreshEvery');
+    refreshEveryEl.textContent = REFRESH_SECS.toString();
+
+    const CH_TZ = 'Europe/Zurich';
+    function fmtTime(d){ return d.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:CH_TZ}); }
+    function fmtDate(d){ return d.toLocaleDateString('de-CH',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric',timeZone:CH_TZ}); }
+    function minutesDiff(from,to){ return Math.round((to-from)/60000); }
+    function parseIso(iso){ return new Date(iso); }
+    function setClock(){ const now=new Date(); timeEl.textContent=fmtTime(now); dateEl.textContent=fmtDate(now); }
+    setClock(); setInterval(setClock,1000);
+
+    async function load(){
+      try{
+        const resp = await fetch(API_URL,{cache:'no-store'});
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const data = await resp.json();
+        render(data);
+        netWarnEl.style.display='none';
+        lastUpdateEl.textContent='Zuletzt aktualisiert: '+fmtTime(new Date());
+      }catch(e){
+        netWarnEl.style.display='block';
+        console.error(e);
+      }
+    }
+
+    function render(data){
+      const now=new Date();
+      const list=data.stationboard||[];
+      if(!list.length){ rowsEl.innerHTML='<tr><td colspan="6" style="text-align:center;padding:1.4rem">Keine Abfahrten</td></tr>'; return; }
+      rowsEl.innerHTML=list.map(item=>{
+        const stop=item.stop||{};
+        const planned=stop.departure?parseIso(stop.departure):null;
+        const prog=(stop.prognosis&&stop.prognosis.departure)?parseIso(stop.prognosis.departure):null;
+        const time=prog||planned;
+        const delay=(typeof stop.delay==='number')?stop.delay:0;
+        const mins=time?Math.max(0,minutesDiff(now,time)):null;
+        const when=time?fmtTime(time):"--:--";
+        const to=item.to||"";
+        const line=(item.category||"")+" "+(item.number||"");
+        const track=stop.platform||"-";
+        const status=(delay>0)?("+"+delay+" min"):"puenktlich";
+        const cls=(delay>0)?"delay":"ontime";
+        return `<tr>
+          <td class="col-time">${when}</td>
+          <td>${to}</td>
+          <td class="col-line"><span class="pill">${line}</span></td>
+          <td class="col-track">${track}</td>
+          <td class="col-in">${mins!==null?mins+"′":"-"}</td>
+          <td class="${cls}">${status}</td>
+        </tr>`;
+      }).join("");
+    }
+
+    load(); setInterval(load, REFRESH_SECS*1000);
+  })();
+  </script>
+</body>
+</html>
