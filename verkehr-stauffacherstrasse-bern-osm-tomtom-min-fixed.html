@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verkehr – Stauffacherstrasse 130 Bern (OSM + TomTom)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    html, body { height:100%; margin:0; }
+    #map { height:100%; width:100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var center = { lat: 46.9697, lng: 7.4685 };
+    var zoom = 15;
+    var map = L.map('map', { center: center, zoom: zoom, zoomControl:false, attributionControl:true });
+
+    // OSM Base
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
+    }).addTo(map);
+
+    // TomTom Traffic Flow (recommended style: relative0)
+    L.tileLayer('https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=F7panHoCDCogHY5GFzfLSdrRj5NMB4iD&thickness=10', {
+      opacity: 0.9,
+      zIndex: 1000,
+      attribution: 'Traffic © TomTom'
+    }).addTo(map);
+
+    // TomTom Traffic Incidents (style s2)
+    L.tileLayer('https://api.tomtom.com/traffic/map/4/tile/incidents/s2/{z}/{x}/{y}.png?key=F7panHoCDCogHY5GFzfLSdrRj5NMB4iD', {
+      opacity: 0.95,
+      zIndex: 1100,
+      attribution: 'Incidents © TomTom'
+    }).addTo(map);
+  </script>
+</body>
+</html>
