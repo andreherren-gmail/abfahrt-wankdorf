@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abfahrtstafeln & Verkehr – Übersicht</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #002b45;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .board {
+      background: #013b5a;
+      border-radius: 12px;
+      padding: 30px 50px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 25px;
+      color: #ffd400; /* SBB-Gelb */
+    }
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    a {
+      display: block;
+      padding: 15px 20px;
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: 600;
+      border-radius: 8px;
+      background: #004d73;
+      color: #fff;
+      transition: background 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    a:hover {
+      background: #006a9c;
+      transform: translateY(-2px);
+    }
+    a:active {
+      transform: translateY(1px);
+    }
+  </style>
+</head>
+<body>
+  <div class="board">
+    <h1>Abfahrtstafeln & Verkehr</h1>
+    <div class="links">
+      <a href="https://andreherren-gmail.github.io/abfahrt-wankdorf/verkehr-stauffacherstrasse-bern-osm-tomtom-min-fixed.html" target="_blank">🚦 Verkehr Stauffacherstrasse Bern</a>
+      <a href="https://andreherren-gmail.github.io/abfahrt-wankdorf/abfahrten-bern-wankdorf-clean.html" target="_blank">🚉 Abfahrten Bern Wankdorf</a>
+      <a href="https://andreherren-gmail.github.io/abfahrt-wankdorf/abfahrten-loechligut-bern-rbs.html" target="_blank">🚌 Abfahrten Bern Löchligut (RBS)</a>
+    </div>
+  </div>
+</body>
+</html>
