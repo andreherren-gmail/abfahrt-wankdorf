@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wankdorf – Verkehr Webcams (A1/A6/A12)</title>
+  <style>
+    :root{
+      --bg:#0b2b6b; --bg2:#083261; --card:#0f3d7a; --fg:#fff; --muted:#cdd7ff; --accent:#ffd800;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; background:linear-gradient(180deg,var(--bg),var(--bg2)); color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    header{ display:flex; align-items:center; justify-content:space-between; padding:.8rem 1rem; background:rgba(255,255,255,.08); }
+    .title{ display:flex; gap:.7rem; align-items:center; font-weight:800; letter-spacing:.3px; }
+    .title .station{ font-weight:900; text-transform:uppercase; }
+    .clock{ color:var(--accent); font-weight:800; font-variant-numeric:tabular-nums; }
+    .grid{ display:grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; gap: 12px; padding: 12px; height: calc(100% - 60px); }
+    .card{ position:relative; background:var(--card); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+    .card h3{ margin:0; padding:.5rem .75rem; font-size: clamp(14px, 1.8vw, 20px); background:rgba(0,0,0,.18); }
+    .imgwrap{ position:relative; flex:1; display:flex; align-items:center; justify-content:center; background:#001a33; }
+    .imgwrap img{ max-width:100%; max-height:100%; width:auto; height:auto; display:block; }
+    .caption{ position:absolute; left:.6rem; bottom:.4rem; font-size:.8rem; color:var(--muted); background:rgba(0,0,0,.35); padding:.2rem .4rem; border-radius:6px; }
+    footer{ padding:.4rem .8rem; font-size:.8rem; color:var(--muted); text-align:center; }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; height:auto; }
+      .card{ min-height: 40vh; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="1.5" y="5" width="21" height="14" rx="3" ry="3" stroke="white" opacity=".9"></rect>
+        <path d="M3.5 12h17" stroke="white" stroke-width="2" opacity=".9"></path>
+      </svg>
+      <span>Webcams Verkehr</span>
+      <span class="station">Bern – Wankdorf</span>
+    </div>
+    <div class="clock"><span id="time">--:--</span></div>
+  </header>
+
+  <div class="grid" id="grid">
+    <div class="card">
+      <h3>Bern → Zürich (A1, Grauholz)</h3>
+      <div class="imgwrap">
+        <img id="camZRH" alt="A1 Grauholz Richtung Zürich" src="https://www.tbamobcam.ch/offen/tba002/stb_cam26.jpg" />
+        <div class="caption">Quelle: Tiefbauamt Kanton Bern</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Bern → Thun (A6, Wankdorf)</h3>
+      <div class="imgwrap">
+        <img id="camTHUN" alt="A6 Wankdorf Richtung Thun" src="https://www.tbamobcam.ch/tbastrecke/tba008/stb_cam38.jpg" />
+        <div class="caption">Quelle: Tiefbauamt Kanton Bern</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Bern → Lausanne / Fribourg (A6 Verzweigung)</h3>
+      <div class="imgwrap">
+        <img id="camLAUS" alt="A6 Verzweigung Richtung Lausanne/Fribourg" src="https://www.tbamobcam.ch/offen/tba009/stb_cam39.jpg" />
+        <div class="caption">Quelle: Tiefbauamt Kanton Bern</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Wankdorf – Verzweigung (Kreuzung)</h3>
+      <div class="imgwrap">
+        <img id="camJUNC" alt="A1/A6 Verzweigung Wankdorf" src="https://www.tbamobcam.ch/tbastrecke/tba010/stb_cam20.jpg" />
+        <div class="caption">Quelle: Tiefbauamt Kanton Bern</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Bilder werden automatisch aktualisiert (alle <span id="every">30</span>s). Quellen: ASTRA/Stadttangente Bern – Tiefbauamt Kanton Bern.
+  </footer>
+
+  <script>
+    const CH_TZ = 'Europe/Zurich';
+    function fmtTime(d){ return d.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:CH_TZ}); }
+    function tick(){ document.getElementById('time').textContent = fmtTime(new Date()); }
+    tick(); setInterval(tick,1000);
+
+    const REFRESH = 30; // seconds
+    document.getElementById('every').textContent = REFRESH;
+    const cams = [
+      { id: 'camZRH', url: 'https://www.tbamobcam.ch/offen/tba002/stb_cam26.jpg' },
+      { id: 'camTHUN', url: 'https://www.tbamobcam.ch/tbastrecke/tba008/stb_cam38.jpg' },
+      { id: 'camLAUS', url: 'https://www.tbamobcam.ch/offen/tba009/stb_cam39.jpg' },
+      { id: 'camJUNC', url: 'https://www.tbamobcam.ch/tbastrecke/tba010/stb_cam20.jpg' },
+    ];
+    function refresh(){
+      const t = Date.now();
+      cams.forEach(c => {
+        const el = document.getElementById(c.id);
+        el.src = c.url + (c.url.includes('?') ? '&' : '?') + 't=' + t;
+      });
+    }
+    setInterval(refresh, REFRESH * 1000);
+  </script>
+</body>
+</html>
